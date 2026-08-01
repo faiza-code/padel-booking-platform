@@ -1,0 +1,67 @@
+:root {
+  --court-deep: #506600;      /* أخضر زيتوني - اللون الأساسي */
+  --court-mid: #444933;
+  --court-light: #5b7300;
+  --court-line: #ffffff;      /* نص فاتح فوق الأساسي */
+  --ball-lime: #ccff00;       /* لمسة الليمون الفاقع (خلفيات بارزة) */
+  --ball-lime-dark: #5b7300;  /* نص/حدود فوق خلفية الليمون */
+  --clay: #ba1a1a;            /* أحمر الخطأ */
+  --ink: #191c1e;
+  --ink-soft: #444933;
+  --surface: #f7f9fb;
+  --card: #ffffff;
+  --border: #c4c9ac;
+
+  --font-display: "Montserrat", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "Inter", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  margin: 0;
+  color: var(--ink);
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+a { color: inherit; }
+
+input, select, textarea {
+  font-family: var(--font-body);
+  font-size: 15px;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+::selection {
+  background: var(--ball-lime);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 3px solid var(--ball-lime-dark);
+  outline-offset: 2px;
+}
