@@ -30,7 +30,17 @@ public class BookingsController : ControllerBase
 
         return Ok(result.Order);
     }
+    // GET /api/bookings/lookup?phone=xxxxxxxx  (العميل يبحث عن حجوزاته برقم هاتفه فقط)
+    [HttpGet("lookup")]
+    [AllowAnonymous]
+    public async Task<ActionResult<List<BookingOrderDto>>> LookupByPhone([FromQuery] string phone)
+    {
+        if (string.IsNullOrWhiteSpace(phone))
+            return BadRequest(new { message = "Phone number is required." });
 
+        var orders = await _bookingService.LookupByPhoneAsync(phone);
+        return Ok(orders);
+    }
     // GET /api/bookings  (لوحة التحكم فقط - مع فلترة حسب الملعب/التاريخ/الحالة/طريقة الدفع)
     [HttpGet]
     [Authorize]

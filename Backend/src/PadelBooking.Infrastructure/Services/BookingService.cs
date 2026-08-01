@@ -143,6 +143,30 @@ public class BookingService : IBookingService
         return applicableTier?.PricePerHour ?? court.PricePerHour;
     }
 
+    public async Task<List<BookingOrderDto>> LookupByPhoneAsync(string phone)
+    {
+        var orders = await _db.BookingOrders
+            .Include(o => o.Slots)
+            .Where(o => o.CustomerPhone == phone)
+            .OrderByDescending(o => o.CreatedAt)
+            .ToListAsync();
+
+        return orders.Select(o => new BookingOrderDto
+        {
+            Id = o.Id,
+            TotalPrice = o.TotalPrice,
+            PaymentMethod = o.PaymentMethod,
+            PaymentStatus = o.PaymentStatus,
+            Slots = o.Slots.Select(s => new BookingSlotSummaryDto
+            {
+                Date = s.BookingDate,
+                StartTime = s.StartTime,
+                EndTime = s.EndTime,
+                Price = Math.Round(s.PricePerHour * (decimal)(s.EndTime - s.StartTime).TotalHours, 3),
+                Status = s.Status
+            }).ToList()
+        }).ToList();
+    }
     public async Task<List<AdminBookingDto>> GetAllForAdminAsync(BookingFilterRequest filter)
     {
         var query = _db.BookingOrders

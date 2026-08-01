@@ -21,7 +21,7 @@ export default function LoginPage() {
       await login(username, password);
       navigate("/admin/courts");
     } catch {
-      setError("اسم المستخدم أو كلمة المرور غير صحيحة.");
+      setError("Invalid username or password.");
     } finally {
       setLoading(false);
     }
@@ -30,30 +30,30 @@ export default function LoginPage() {
   return (
     <div style={{ maxWidth: 400, margin: "100px auto", padding: "0 20px" }}>
       <Card>
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 10 }}>
-            <Icon name="sports_tennis" size={24} />
-            <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 18, color: "var(--court-deep)" }}>PadelPlay</span>
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 }}>
+            <Icon name="sports_tennis" size={24} style={{ color: "var(--lime)" }} />
+            <span style={{ fontFamily: "var(--font-display)", fontWeight: 900, fontSize: 20, color: "var(--lime)" }}>PadelPlay</span>
           </div>
-          <h2>لوحة التحكم</h2>
+          <h2 style={{ fontSize: 20 }}>Admin Portal</h2>
         </div>
-        <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
+        <form onSubmit={handleSubmit} style={{ display: "grid", gap: 14 }}>
           <input
-            placeholder="اسم المستخدم"
+            placeholder="Username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            style={{ padding: 12, borderRadius: 8, border: "1px solid var(--border)" }}
+            style={{ padding: 14, borderRadius: 10, border: "1px solid var(--border-variant)" }}
           />
           <input
             type="password"
-            placeholder="كلمة المرور"
+            placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={{ padding: 12, borderRadius: 8, border: "1px solid var(--border)" }}
+            style={{ padding: 14, borderRadius: 10, border: "1px solid var(--border-variant)" }}
           />
-          {error && <p style={{ color: "var(--clay)", margin: 0 }}>{error}</p>}
+          {error && <p style={{ color: "var(--clay)", margin: 0, fontSize: 13 }}>{error}</p>}
           <Button type="submit" disabled={loading} style={{ width: "100%" }}>
-            {loading ? "جارٍ الدخول..." : "تسجيل الدخول"}
+            {loading ? "Signing in..." : "Sign In"}
           </Button>
         </form>
       </Card>

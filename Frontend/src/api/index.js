@@ -36,3 +36,5 @@ export const startCheckout = (bookingId) =>
   client.post(`/bookings/${bookingId}/checkout`).then((r) => r.data);
 export const confirmPayment = (bookingId, sessionId) =>
   client.post(`/bookings/${bookingId}/confirm-payment`, { sessionId }).then((r) => r.data);
+export const lookupBookingsByPhone = (phone) =>
+  client.get(`/bookings/lookup`, { params: { phone } }).then((r) => r.data);

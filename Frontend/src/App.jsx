@@ -3,6 +3,7 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import BookingPage from "./pages/customer/BookingPage";
+import MyBookingsPage from "./pages/customer/MyBookingsPage";
 import { PaymentSuccessPage, PaymentCancelPage } from "./pages/customer/PaymentResultPage";
 
 import LoginPage from "./pages/admin/LoginPage";
@@ -18,6 +19,7 @@ export default function App() {
         <Routes>
           {/* واجهة العميل */}
           <Route path="/" element={<BookingPage />} />
+          <Route path="/my-bookings" element={<MyBookingsPage />} />
           <Route path="/payment/success" element={<PaymentSuccessPage />} />
           <Route path="/payment/cancel" element={<PaymentCancelPage />} />
 

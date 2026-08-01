@@ -12,6 +12,7 @@ public interface IBookingService
 {
     Task<BookingResult> CreateBookingAsync(CreateBookingRequest request);
     Task<List<AdminBookingDto>> GetAllForAdminAsync(BookingFilterRequest filter);
+    Task<List<BookingOrderDto>> LookupByPhoneAsync(string phone);
 }
 
 // نتيجة محاولة الحجز - تفرّق بين النجاح والفشل مع سبب واضح للعميل

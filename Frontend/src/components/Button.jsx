@@ -1,32 +1,35 @@
 export default function Button({ variant = "primary", children, style, ...props }) {
   const base = {
     fontFamily: "var(--font-display)",
-    fontWeight: 700,
-    fontSize: 14,
-    padding: "13px 24px",
+    fontWeight: 800,
+    fontSize: 13,
+    letterSpacing: "0.03em",
+    textTransform: "uppercase",
+    padding: "14px 24px",
     borderRadius: 12,
     border: "none",
-    transition: "transform 0.12s ease, opacity 0.12s ease",
+    transition: "transform 0.12s ease, opacity 0.12s ease, filter 0.12s ease",
   };
 
   const variants = {
     primary: {
-      background: "var(--court-deep)",
-      color: "var(--court-line)",
-      boxShadow: "0 4px 14px rgba(80, 102, 0, 0.18)",
+      background: "var(--lime)",
+      color: "var(--on-lime)",
+      boxShadow: "0 8px 20px rgba(195, 244, 0, 0.15)",
     },
     accent: {
-      background: "var(--ball-lime)",
-      color: "var(--ball-lime-dark)",
+      background: "var(--lime)",
+      color: "var(--on-lime)",
     },
     secondary: {
-      background: "var(--court-deep)",
-      color: "var(--court-line)",
+      // زر "معكوس" (فاتح فوق غامق) - يطابق أزرار "Weekly Hours" بالتصميم
+      background: "var(--ink)",
+      color: "var(--bg)",
     },
     outline: {
       background: "transparent",
       color: "var(--ink)",
-      border: "1.5px solid var(--border)",
+      border: "1.5px solid var(--border-variant)",
     },
     ghost: {
       background: "transparent",
@@ -46,7 +49,7 @@ export default function Button({ variant = "primary", children, style, ...props 
       style={{
         ...base,
         ...variants[variant],
-        opacity: props.disabled ? 0.5 : 1,
+        opacity: props.disabled ? 0.4 : 1,
         cursor: props.disabled ? "not-allowed" : "pointer",
         ...style,
       }}

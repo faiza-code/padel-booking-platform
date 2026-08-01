@@ -3,8 +3,8 @@ import { getAvailability, createBooking, startCheckout } from "../../api";
 import Card from "../../components/Card";
 import Button from "../../components/Button";
 import Icon from "../../components/Icon";
-import StepBadge from "../../components/StepBadge";
 import DateStrip from "../../components/DateStrip";
+import CustomerHeader from "../../components/CustomerHeader";
 
 function todayStr() {
   const d = new Date();
@@ -12,8 +12,7 @@ function todayStr() {
 }
 
 function fmtTime(t) {
-  // "10:00:00" -> "10:00"
-  return t.slice(0, 5);
+  return t.slice(0, 5); // "10:00:00" -> "10:00"
 }
 
 function addHours(t, hours) {
@@ -23,6 +22,8 @@ function addHours(t, hours) {
 }
 
 export default function BookingPage() {
+  const [step, setStep] = useState("select"); // select | checkout | success
+
   const [date, setDate] = useState(todayStr());
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -35,7 +36,7 @@ export default function BookingPage() {
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState(0); // 0 = عند الوصول, 1 = إلكتروني
+  const [paymentMethod, setPaymentMethod] = useState(0); // 0 = cash on arrival, 1 = e-payment
 
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
@@ -47,7 +48,7 @@ export default function BookingPage() {
     setSelectedStart(null);
     getAvailability(date)
       .then(setSlots)
-      .catch(() => setError("تعذّر تحميل الأوقات المتاحة. حاول مرة أخرى."))
+      .catch(() => setError("Couldn't load available times. Please try again."))
       .finally(() => setLoading(false));
   }, [date]);
 
@@ -65,11 +66,7 @@ export default function BookingPage() {
   async function submitBooking() {
     setSubmitError("");
     if (!phone.trim()) {
-      setSubmitError("رقم الهاتف مطلوب.");
-      return;
-    }
-    if (cart.length === 0) {
-      setSubmitError("أضف فترة حجز واحدة على الأقل.");
+      setSubmitError("Phone number is required.");
       return;
     }
 
@@ -93,238 +90,373 @@ export default function BookingPage() {
 
       setResult(order);
       setCart([]);
+      setStep("success");
     } catch (err) {
-      setSubmitError(err.response?.data?.message || "تعذّر إتمام الحجز. حاول مرة أخرى.");
+      setSubmitError(err.response?.data?.message || "Couldn't complete the booking. Please try again.");
     } finally {
       setSubmitting(false);
     }
   }
 
-  // ---------- شاشة النجاح ----------
-  if (result) {
+  // ================= SUCCESS =================
+  if (step === "success" && result) {
     return (
-      <div style={{ maxWidth: 560, margin: "0 auto", padding: "60px 20px 80px", textAlign: "center" }}>
-        <div style={{ position: "relative", display: "inline-block", marginBottom: 24 }}>
+      <div>
+        <CustomerHeader />
+        <div style={{ maxWidth: 640, margin: "0 auto", padding: "60px 20px 80px", textAlign: "center" }}>
           <div style={{
-            width: 88, height: 88, borderRadius: "50%",
-            background: "var(--ball-lime)", display: "flex", alignItems: "center",
-            justifyContent: "center", position: "relative", zIndex: 1,
-            boxShadow: "0 0 40px rgba(205,242,0,0.35)",
+            width: 96, height: 96, borderRadius: "50%", background: "var(--lime)",
+            display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px",
+            boxShadow: "0 0 40px rgba(195,244,0,0.25)",
           }}>
-            <Icon name="check_circle" size={44} style={{ color: "var(--ink)" }} />
-          </div>
-        </div>
-
-        <h2 style={{ fontSize: 28, marginBottom: 8 }}>تم تأكيد حجزك!</h2>
-        <p style={{ color: "var(--ink-soft)", marginBottom: 32 }}>
-          ملعبك جاهز. سيتم التواصل معك على الرقم المسجّل عند الحاجة.
-        </p>
-
-        <Card style={{ textAlign: "right" }}>
-          <div style={{
-            display: "flex", justifyContent: "space-between", alignItems: "center",
-            borderBottom: "1px solid var(--border)", paddingBottom: 16, marginBottom: 16,
-          }}>
-            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.5, color: "var(--ink-soft)" }}>رقم الحجز</span>
-            <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700 }}>#{result.id}</span>
+            <Icon name="check_circle" size={48} style={{ color: "var(--on-lime)" }} />
           </div>
 
-          <div style={{ display: "grid", gap: 12 }}>
-            {result.slots.map((s, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <Icon name="schedule" size={16} style={{ color: "var(--ball-lime-dark)" }} />
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 14 }}>
-                    {s.date} | {fmtTime(s.startTime)} - {fmtTime(s.endTime)}
-                  </span>
+          <h1 style={{ fontSize: 30, textTransform: "uppercase", marginBottom: 8 }}>Booking Confirmed!</h1>
+          <p style={{ color: "var(--ink-soft)", marginBottom: 32 }}>
+            Order ID: <span style={{ color: "var(--lime)", fontWeight: 800 }}>#PAD-{result.id}</span>
+          </p>
+
+          <Card style={{ textAlign: "left" }}>
+            <h3 style={{ fontSize: 16, marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
+              <Icon name="description" size={18} style={{ color: "var(--lime)" }} /> Reservation Summary
+            </h3>
+
+            <div style={{ display: "grid", gap: 14 }}>
+              {result.slots.map((s, i) => (
+                <div key={i} style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  paddingBottom: 14, borderBottom: "1px solid var(--border)",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <Icon name="sports_tennis" size={18} style={{ color: "var(--lime)" }} />
+                    <span style={{ fontSize: 14 }}>{s.date} &middot; {fmtTime(s.startTime)} - {fmtTime(s.endTime)}</span>
+                  </div>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "var(--lime)" }}>{s.price.toFixed(3)} OMR</span>
                 </div>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 14 }}>{s.price.toFixed(3)} ر.ع</span>
+              ))}
+            </div>
+
+            <div style={{
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+              background: "var(--card-hi)", borderRadius: 12, padding: 18, marginTop: 20,
+              borderLeft: "4px solid var(--lime)",
+            }}>
+              <div>
+                <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1, color: "var(--ink-soft)", textTransform: "uppercase" }}>
+                  Total Amount
+                </p>
               </div>
-            ))}
-          </div>
+              <span style={{ fontSize: 24, fontWeight: 900, color: "var(--lime)" }}>{result.totalPrice.toFixed(3)} OMR</span>
+            </div>
+          </Card>
 
-          <div style={{
-            display: "flex", justifyContent: "space-between", alignItems: "center",
-            borderTop: "1px dashed var(--border)", marginTop: 16, paddingTop: 16,
-          }}>
-            <span style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}>الإجمالي</span>
-            <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 800 }}>
-              {result.totalPrice.toFixed(3)} ر.ع
-            </span>
-          </div>
-
-          <div style={{
-            display: "flex", gap: 10, alignItems: "flex-start",
-            background: "var(--surface)", borderRadius: 12, padding: 14, marginTop: 20,
-          }}>
-            <Icon name="info" size={18} style={{ color: "var(--ink)", marginTop: 2 }} />
-            <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: 0 }}>
-              الدفع عند الوصول للملعب. برجاء الحضور قبل 15 دقيقة من موعدك.
-            </p>
-          </div>
-        </Card>
-
-        <Button style={{ marginTop: 24 }} onClick={() => setResult(null)}>
-          حجز جديد
-        </Button>
+          <Button style={{ marginTop: 24, width: "100%" }} onClick={() => { setResult(null); setStep("select"); }}>
+            Back to Home
+          </Button>
+        </div>
       </div>
     );
   }
 
-  // ---------- شاشة الحجز ----------
-  return (
-    <div style={{ maxWidth: 720, margin: "0 auto", padding: "40px 20px 80px" }}>
-      <header style={{ textAlign: "center", marginBottom: 32 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 6 }}>
-          <Icon name="sports_tennis" size={26} style={{ color: "var(--court-deep)" }} />
-          <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 20, color: "var(--court-deep)" }}>PadelPlay</span>
-        </div>
-        <h1 style={{ fontSize: 30 }}>احجز ملعب البادل</h1>
-        <p style={{ color: "var(--ink-soft)" }}>اختر التاريخ والوقت المناسب لك</p>
-      </header>
+  // ================= CHECKOUT =================
+  if (step === "checkout") {
+    return (
+      <div>
+        <CustomerHeader />
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 20px 80px" }}>
+          <button onClick={() => setStep("select")} style={{
+            background: "none", border: "none", color: "var(--ink-soft)",
+            display: "flex", alignItems: "center", gap: 6, marginBottom: 20, fontSize: 14, fontWeight: 700,
+          }}>
+            <Icon name="arrow_back" size={18} /> Back to Court
+          </button>
 
-      <Card>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-          <StepBadge number={1} />
-          <h2 style={{ fontSize: 18 }}>اختر الموعد</h2>
-        </div>
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 32, alignItems: "start" }}>
+            {/* Left: forms */}
+            <div style={{ display: "grid", gap: 32 }}>
+              <section>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                  <span style={{
+                    width: 30, height: 30, borderRadius: "50%", background: "var(--lime)", color: "var(--on-lime)",
+                    display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 13,
+                  }}>1</span>
+                  <h2 style={{ fontSize: 20, textTransform: "uppercase" }}>Player Information</h2>
+                </div>
+                <Card>
+                  <div style={{ display: "grid", gap: 16 }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: 11, fontWeight: 800, letterSpacing: 0.5, color: "var(--lime)", marginBottom: 8, textTransform: "uppercase" }}>
+                        Phone Number (Mandatory) *
+                      </label>
+                      <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+000 000 0000"
+                        style={{ width: "100%", padding: 14, borderRadius: 10, border: "1px solid var(--lime)" }} />
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                      <div>
+                        <label style={{ display: "block", fontSize: 11, fontWeight: 800, letterSpacing: 0.5, color: "var(--ink-soft)", marginBottom: 8, textTransform: "uppercase" }}>
+                          Full Name (Optional)
+                        </label>
+                        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. John Doe"
+                          style={{ width: "100%", padding: 14, borderRadius: 10, border: "1px solid var(--border-variant)" }} />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", fontSize: 11, fontWeight: 800, letterSpacing: 0.5, color: "var(--ink-soft)", marginBottom: 8, textTransform: "uppercase" }}>
+                          Email (Optional)
+                        </label>
+                        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com"
+                          style={{ width: "100%", padding: 14, borderRadius: 10, border: "1px solid var(--border-variant)" }} />
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </section>
 
-        <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--ink-soft)", marginBottom: 8 }}>التاريخ</label>
-        <DateStrip value={date} onChange={setDate} />
+              <section>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                  <span style={{
+                    width: 30, height: 30, borderRadius: "50%", background: "var(--lime)", color: "var(--on-lime)",
+                    display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 13,
+                  }}>2</span>
+                  <h2 style={{ fontSize: 20, textTransform: "uppercase" }}>Payment Selection</h2>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <Card
+                    onClick={() => setPaymentMethod(0)}
+                    style={{ cursor: "pointer", border: paymentMethod === 0 ? "2px solid var(--lime)" : "2px solid transparent" }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
+                      <Icon name="payments" size={30} style={{ color: paymentMethod === 0 ? "var(--lime)" : "var(--ink-soft)" }} />
+                      <span style={{
+                        width: 20, height: 20, borderRadius: "50%",
+                        border: `2px solid ${paymentMethod === 0 ? "var(--lime)" : "var(--border-variant)"}`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        {paymentMethod === 0 && <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--lime)" }} />}
+                      </span>
+                    </div>
+                    <h3 style={{ fontSize: 16, marginBottom: 4 }}>Cash on Arrival</h3>
+                    <p style={{ fontSize: 13, color: "var(--ink-soft)" }}>Pay at the front desk before your session starts.</p>
+                  </Card>
 
-        <div style={{ marginTop: 24 }}>
-          <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--ink-soft)", marginBottom: 8 }}>مدة الحجز</label>
-          <div style={{ display: "flex", gap: 8 }}>
-            {[1, 2, 3].map((h) => (
-              <button
-                key={h}
-                onClick={() => setDuration(h)}
-                style={{
-                  flex: 1, padding: "12px 0", borderRadius: 10,
-                  border: duration === h ? "2px solid var(--court-deep)" : "1px solid var(--border)",
-                  background: duration === h ? "var(--court-deep)" : "white",
-                  color: duration === h ? "white" : "var(--ink)",
-                  fontFamily: "var(--font-mono)", fontWeight: 600,
-                }}
-              >
-                {h} {h === 1 ? "ساعة" : "ساعات"}
-              </button>
-            ))}
-          </div>
-        </div>
+                  <Card
+                    onClick={() => setPaymentMethod(1)}
+                    style={{ cursor: "pointer", border: paymentMethod === 1 ? "2px solid var(--lime)" : "2px solid transparent" }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
+                      <Icon name="account_balance_wallet" size={30} style={{ color: paymentMethod === 1 ? "var(--lime)" : "var(--ink-soft)" }} />
+                      <span style={{
+                        width: 20, height: 20, borderRadius: "50%",
+                        border: `2px solid ${paymentMethod === 1 ? "var(--lime)" : "var(--border-variant)"}`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        {paymentMethod === 1 && <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--lime)" }} />}
+                      </span>
+                    </div>
+                    <h3 style={{ fontSize: 16, marginBottom: 4 }}>E-Payment</h3>
+                    <p style={{ fontSize: 13, color: "var(--ink-soft)" }}>Secure checkout via Thawani payment gateway.</p>
+                  </Card>
+                </div>
+              </section>
 
-        <div style={{ marginTop: 24 }}>
-          <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--ink-soft)", marginBottom: 8 }}>الأوقات المتاحة</label>
-          {loading && <p style={{ color: "var(--ink-soft)" }}>جارٍ التحميل...</p>}
-          {error && <p style={{ color: "var(--clay)" }}>{error}</p>}
-          {!loading && !error && slots.length === 0 && (
-            <p style={{ color: "var(--ink-soft)" }}>لا توجد أوقات متاحة بهذا التاريخ.</p>
-          )}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {slots.map((s) => (
-              <button
-                key={s.startTime}
-                onClick={() => setSelectedStart(s.startTime)}
-                style={{
-                  padding: "10px 16px", borderRadius: 999,
-                  border: selectedStart === s.startTime ? "2px solid var(--ball-lime-dark)" : "1px solid var(--border)",
-                  background: selectedStart === s.startTime ? "var(--ball-lime)" : "white",
-                  fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: 600,
-                }}
-              >
-                {fmtTime(s.startTime)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <Button
-          variant="secondary"
-          style={{ marginTop: 20, width: "100%" }}
-          disabled={!selectedStart}
-          onClick={addToCart}
-        >
-          + إضافة للحجز
-        </Button>
-      </Card>
-
-      {cart.length > 0 && (
-        <Card style={{ marginTop: 20 }}>
-          <h3 style={{ marginBottom: 12, fontSize: 16 }}>فترات الحجز المختارة</h3>
-          {cart.map((c, i) => (
-            <div key={i} style={{
-              display: "flex", justifyContent: "space-between", alignItems: "center",
-              padding: "10px 0", borderBottom: "1px solid var(--border)",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <Icon name="schedule" size={16} style={{ color: "var(--ball-lime-dark)" }} />
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 14 }}>
-                  {c.date} | {fmtTime(c.startTime)} - {fmtTime(c.endTime)}
-                </span>
+              <div style={{
+                display: "flex", alignItems: "center", gap: 14, padding: 20,
+                background: "var(--card)", borderRadius: 12, border: "1px solid var(--border)",
+              }}>
+                <Icon name="lock" size={20} style={{ color: "var(--ink-soft)" }} />
+                <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: 0 }}>
+                  All transactions are secured with 256-bit encryption. Your data is never shared with third parties.
+                </p>
               </div>
-              <button onClick={() => removeFromCart(i)} style={{ background: "none", border: "none", color: "var(--clay)", fontWeight: 700 }}>
-                حذف
-              </button>
             </div>
-          ))}
-        </Card>
-      )}
 
-      <Card style={{ marginTop: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-          <StepBadge number={2} />
-          <h2 style={{ fontSize: 18 }}>بياناتك</h2>
-        </div>
-        <div style={{ display: "grid", gap: 12 }}>
-          <input placeholder="رقم الهاتف *" value={phone} onChange={(e) => setPhone(e.target.value)}
-            style={{ padding: 12, borderRadius: 10, border: "1px solid var(--border)", height: 48 }} />
-          <input placeholder="الاسم (اختياري)" value={name} onChange={(e) => setName(e.target.value)}
-            style={{ padding: 12, borderRadius: 10, border: "1px solid var(--border)", height: 48 }} />
-          <input placeholder="البريد الإلكتروني (اختياري)" value={email} onChange={(e) => setEmail(e.target.value)}
-            style={{ padding: 12, borderRadius: 10, border: "1px solid var(--border)", height: 48 }} />
-        </div>
-      </Card>
+            {/* Right: dark summary */}
+            <div style={{
+              background: "var(--card)", borderRadius: 20, padding: 24,
+              position: "sticky", top: 88, border: "1px solid var(--border-variant)",
+            }}>
+              <h3 style={{ fontSize: 15, textTransform: "uppercase", letterSpacing: 1, marginBottom: 20 }}>
+                Booking Summary
+              </h3>
 
-      <Card style={{ marginTop: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-          <StepBadge number={3} />
-          <h2 style={{ fontSize: 18 }}>طريقة الدفع</h2>
+              <div style={{ display: "grid", gap: 14, borderBottom: "1px solid var(--border)", paddingBottom: 16, marginBottom: 16 }}>
+                {cart.map((c, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--ink-soft)" }}>
+                      <Icon name="calendar_today" size={14} /> {c.date}
+                    </span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--ink-soft)" }}>
+                      <Icon name="schedule" size={14} /> {fmtTime(c.startTime)} - {fmtTime(c.endTime)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                <span style={{ fontWeight: 700 }}>Sessions</span>
+                <span style={{ fontSize: 24, fontWeight: 900, color: "var(--lime)" }}>{cart.length}</span>
+              </div>
+
+              {submitError && <p style={{ color: "var(--clay)", fontSize: 13, marginBottom: 12 }}>{submitError}</p>}
+
+              <Button style={{ width: "100%" }} disabled={submitting} onClick={submitBooking}>
+                {submitting ? "Processing..." : "Confirm Booking"}
+              </Button>
+              <p style={{ textAlign: "center", fontSize: 11, color: "var(--ink-soft)", marginTop: 10 }}>
+                Final price is calculated automatically based on duration.
+              </p>
+            </div>
+          </div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <button onClick={() => setPaymentMethod(0)} style={{
-            display: "flex", alignItems: "center", gap: 12, padding: 16, borderRadius: 12, textAlign: "right",
-            border: paymentMethod === 0 ? "2px solid var(--court-deep)" : "1px solid var(--border)",
-            background: "white",
-          }}>
-            <Icon name="payments" size={22} />
+      </div>
+    );
+  }
+
+  // ================= SELECT =================
+  return (
+    <div>
+      <CustomerHeader />
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 20px 80px" }}>
+        <div style={{ marginBottom: 32 }}>
+          <h1 style={{ fontSize: 32 }}>Reserve Your Court</h1>
+          <p style={{ color: "var(--ink-soft)", marginTop: 6 }}>Select your preferred date and duration to see available slots.</p>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 32, alignItems: "start" }}>
+          {/* Main column */}
+          <div style={{ display: "grid", gap: 32 }}>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 14 }}>الدفع عند الوصول</div>
-              <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>ادفع عند الاستقبال</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                <Icon name="calendar_month" size={18} style={{ color: "var(--lime)" }} />
+                <h2 style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: 1.5, color: "var(--ink-soft)" }}>Select Date</h2>
+              </div>
+              <DateStrip value={date} onChange={setDate} />
             </div>
-          </button>
-          <button onClick={() => setPaymentMethod(1)} style={{
-            display: "flex", alignItems: "center", gap: 12, padding: 16, borderRadius: 12, textAlign: "right",
-            border: paymentMethod === 1 ? "2px solid var(--court-deep)" : "1px solid var(--border)",
-            background: "white",
-          }}>
-            <Icon name="credit_card" size={22} />
+
             <div>
-              <div style={{ fontWeight: 700, fontSize: 14 }}>دفع إلكتروني</div>
-              <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>بطاقة أو محفظة رقمية</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                <Icon name="timer" size={18} style={{ color: "var(--lime)" }} />
+                <h2 style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: 1.5, color: "var(--ink-soft)" }}>Booking Duration</h2>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                {[1, 2, 3].map((h) => (
+                  <button
+                    key={h}
+                    onClick={() => setDuration(h)}
+                    style={{
+                      padding: "16px 0", borderRadius: 14, fontWeight: 800, fontSize: 14,
+                      border: duration === h ? "none" : "1px solid var(--border-variant)",
+                      background: duration === h ? "var(--lime)" : "transparent",
+                      color: duration === h ? "var(--on-lime)" : "var(--ink-soft)",
+                      boxShadow: duration === h ? "0 0 15px rgba(195,244,0,0.15)" : "none",
+                    }}
+                  >
+                    {h} {h === 1 ? "Hour" : "Hours"}
+                  </button>
+                ))}
+              </div>
             </div>
-          </button>
+
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                <Icon name="schedule" size={18} style={{ color: "var(--lime)" }} />
+                <h2 style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: 1.5, color: "var(--ink-soft)" }}>Available Slots</h2>
+              </div>
+
+              {loading && <p style={{ color: "var(--ink-soft)" }}>Loading...</p>}
+              {error && <p style={{ color: "var(--clay)" }}>{error}</p>}
+              {!loading && !error && slots.length === 0 && (
+                <p style={{ color: "var(--ink-soft)" }}>No available times for this date.</p>
+              )}
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 10 }}>
+                {slots.map((s) => {
+                  const active = selectedStart === s.startTime;
+                  return (
+                    <button
+                      key={s.startTime}
+                      onClick={() => setSelectedStart(s.startTime)}
+                      style={{
+                        padding: "12px 16px", borderRadius: 999, fontWeight: 700, fontSize: 14,
+                        border: active ? "none" : "1px solid var(--border-variant)",
+                        background: active ? "var(--lime)" : "var(--card)",
+                        color: active ? "var(--on-lime)" : "var(--ink)",
+                        boxShadow: active ? "0 0 10px rgba(195,244,0,0.2)" : "none",
+                      }}
+                    >
+                      {fmtTime(s.startTime)}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <Button
+                variant="outline"
+                style={{ marginTop: 18, width: "100%" }}
+                disabled={!selectedStart}
+                onClick={addToCart}
+              >
+                + Add to Basket
+              </Button>
+            </div>
+          </div>
+
+          {/* Sticky basket */}
+          <div style={{
+            position: "sticky", top: 88, background: "var(--card)", border: "1px solid var(--border-variant)",
+            borderRadius: 24, padding: 28,
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+              <h3 style={{ fontSize: 14, textTransform: "uppercase", letterSpacing: 1 }}>Your Basket</h3>
+              {cart.length > 0 && (
+                <span style={{
+                  background: "var(--lime)", color: "var(--on-lime)", padding: "4px 8px",
+                  borderRadius: 6, fontSize: 10, fontWeight: 900,
+                }}>
+                  {cart.length} ITEM{cart.length > 1 ? "S" : ""}
+                </span>
+              )}
+            </div>
+
+            {cart.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "30px 0", color: "var(--ink-soft)" }}>
+                <Icon name="shopping_basket" size={36} style={{ opacity: 0.4 }} />
+                <p style={{ fontSize: 13, marginTop: 10 }}>No slots selected yet</p>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gap: 16, marginBottom: 24 }}>
+                {cart.map((c, i) => (
+                  <div key={i} style={{
+                    display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+                    paddingBottom: 16, borderBottom: "1px solid var(--border)",
+                  }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 14 }}>{c.date}</div>
+                      <div style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 4 }}>
+                        {fmtTime(c.startTime)} - {fmtTime(c.endTime)}
+                      </div>
+                    </div>
+                    <button onClick={() => removeFromCart(i)} style={{
+                      background: "none", border: "none", color: "var(--clay)",
+                      fontSize: 11, fontWeight: 800, textTransform: "uppercase",
+                    }}>
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <Button
+              style={{ width: "100%" }}
+              disabled={cart.length === 0}
+              onClick={() => setStep("checkout")}
+            >
+              Book Now
+            </Button>
+          </div>
         </div>
-
-        {submitError && <p style={{ color: "var(--clay)", marginTop: 16 }}>{submitError}</p>}
-
-        <Button
-          style={{ width: "100%", marginTop: 20 }}
-          disabled={submitting}
-          onClick={submitBooking}
-        >
-          {submitting ? "جارٍ التأكيد..." : "تأكيد الحجز"}
-        </Button>
-      </Card>
+      </div>
     </div>
   );
 }
