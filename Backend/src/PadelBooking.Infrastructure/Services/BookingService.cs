@@ -21,10 +21,10 @@ public class BookingService : IBookingService
     {
         // ---------- Validation أساسي ----------
         if (string.IsNullOrWhiteSpace(request.CustomerPhone))
-            return BookingResult.Fail("رقم الهاتف مطلوب.");
+            return BookingResult.Fail("Phone number required.");
 
         if (request.Slots.Count == 0)
-            return BookingResult.Fail("يجب اختيار فترة حجز واحدة على الأقل.");
+            return BookingResult.Fail("At least one booking period must be selected.");
 
         var today = DateOnly.FromDateTime(DateTime.Now);
         var now = DateTime.Now.TimeOfDay;
@@ -32,10 +32,10 @@ public class BookingService : IBookingService
         foreach (var slot in request.Slots)
         {
             if (slot.StartTime >= slot.EndTime)
-                return BookingResult.Fail("وقت البداية يجب أن يكون قبل وقت النهاية.");
+                return BookingResult.Fail("The start time must be before the end time.");
 
             if (slot.Date < today || (slot.Date == today && slot.StartTime < now))
-                return BookingResult.Fail($"لا يمكن حجز وقت ماضٍ ({slot.Date:yyyy-MM-dd} {slot.StartTime}).");
+                return BookingResult.Fail($"Past time cannot be booked ({slot.Date:yyyy-MM-dd} {slot.StartTime}).");
         }
 
         // ---------- توزيع الحجوزات على الملاعب المتاحة ضمن معاملة واحدة ----------
@@ -59,7 +59,7 @@ public class BookingService : IBookingService
                 {
                     await transaction.RollbackAsync();
                     return BookingResult.Fail(
-                        $"عذرًا، لا يوجد ملعب متاح بتاريخ {req.Date:yyyy-MM-dd} من {req.StartTime} إلى {req.EndTime}.");
+                        $"Sorry, no stadium is available on that date. {req.Date:yyyy-MM-dd} From {req.StartTime} To {req.EndTime}.");
                 }
 
                 // التوزيع العشوائي بين الملاعب المتاحة (العميل لا يرى اسم الملعب)
