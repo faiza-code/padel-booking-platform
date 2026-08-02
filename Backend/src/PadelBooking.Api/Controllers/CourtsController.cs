@@ -39,10 +39,10 @@ public class CourtsController : ControllerBase
     public async Task<ActionResult<CourtDto>> Create([FromBody] CreateCourtRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
-            return BadRequest("اسم الملعب مطلوب.");
+            return BadRequest("Stadium name required.");
 
         if (request.PricePerHour <= 0)
-            return BadRequest("سعر الساعة يجب أن يكون أكبر من صفر.");
+            return BadRequest("The price of the watch must be greater than zero.");
 
         var court = await _courtService.CreateAsync(request);
         return CreatedAtAction(nameof(GetById), new { id = court.Id }, court);
@@ -53,7 +53,7 @@ public class CourtsController : ControllerBase
     public async Task<ActionResult<CourtDto>> Update(int id, [FromBody] UpdateCourtRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
-            return BadRequest("اسم الملعب مطلوب.");
+            return BadRequest("Stadium name required.");
 
         var court = await _courtService.UpdateAsync(id, request);
         return court is null ? NotFound() : Ok(court);

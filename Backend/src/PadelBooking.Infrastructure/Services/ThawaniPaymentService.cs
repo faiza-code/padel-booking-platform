@@ -30,7 +30,7 @@ public class ThawaniPaymentService : IThawaniPaymentService
     public async Task<CheckoutSessionDto> CreateCheckoutSessionAsync(int bookingOrderId)
     {
         var order = await _db.BookingOrders.FirstOrDefaultAsync(o => o.Id == bookingOrderId)
-            ?? throw new InvalidOperationException("طلب الحجز غير موجود.");
+            ?? throw new InvalidOperationException("No booking request found.");
 
         // ثواني تستخدم البيسة (1 ر.ع = 1000 بيسة) والحد الأدنى للمبلغ
         var unitAmount = (int)Math.Round(order.TotalPrice * 1000);
@@ -41,7 +41,7 @@ public class ThawaniPaymentService : IThawaniPaymentService
             mode = "payment",
             products = new[]
             {
-                new { name = $"حجز رقم {order.Id}", quantity = 1, unit_amount = unitAmount }
+                new { name = $"Book a number {order.Id}", quantity = 1, unit_amount = unitAmount }
             },
             success_url = _config["Thawani:SuccessUrl"] ?? "http://localhost:3000/payment/success",
             cancel_url = _config["Thawani:CancelUrl"] ?? "http://localhost:3000/payment/cancel"
@@ -51,7 +51,7 @@ public class ThawaniPaymentService : IThawaniPaymentService
         var body = await response.Content.ReadAsStringAsync();
 
         if (!response.IsSuccessStatusCode)
-            throw new InvalidOperationException($"فشل إنشاء جلسة الدفع عند ثواني: {body}");
+            throw new InvalidOperationException($"Payment session creation failed within seconds: {body}");
 
         var result = JsonSerializer.Deserialize<ThawaniSessionResponse>(body,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
@@ -71,7 +71,7 @@ public class ThawaniPaymentService : IThawaniPaymentService
         var order = await _db.BookingOrders
             .Include(o => o.Slots)
             .FirstOrDefaultAsync(o => o.Id == bookingOrderId)
-            ?? throw new InvalidOperationException("طلب الحجز غير موجود.");
+            ?? throw new InvalidOperationException("No booking request found.");
 
         var response = await _http.GetAsync($"checkout/session/{sessionId}");
         var body = await response.Content.ReadAsStringAsync();

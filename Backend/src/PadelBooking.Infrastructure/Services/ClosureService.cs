@@ -24,7 +24,7 @@ public class ClosureService : IClosureService
             {
                 Id = c.Id,
                 CourtId = c.CourtId,
-                CourtName = c.Court != null ? c.Court.Name : "جميع الملاعب",
+                CourtName = c.Court != null ? c.Court.Name : "All stadiums",
                 StartDate = c.StartDate,
                 EndDate = c.EndDate,
                 Reason = c.Reason
@@ -35,7 +35,7 @@ public class ClosureService : IClosureService
     public async Task<ClosureDto> CreateAsync(CreateClosureRequest request)
     {
         if (request.StartDate > request.EndDate)
-            throw new InvalidOperationException("تاريخ البداية يجب أن يكون قبل أو يساوي تاريخ النهاية.");
+            throw new InvalidOperationException("The start date must be before or equal to the end date.");
 
         var closure = new CourtClosure
         {
@@ -48,11 +48,11 @@ public class ClosureService : IClosureService
         _db.CourtClosures.Add(closure);
         await _db.SaveChangesAsync();
 
-        string courtName = "جميع الملاعب";
+        string courtName = "All stadiums";
         if (request.CourtId.HasValue)
         {
             var court = await _db.Courts.FindAsync(request.CourtId.Value);
-            courtName = court?.Name ?? "غير معروف";
+            courtName = court?.Name ?? "unknown";
         }
 
         return new ClosureDto

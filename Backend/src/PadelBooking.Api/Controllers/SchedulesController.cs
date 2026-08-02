@@ -33,7 +33,7 @@ public class SchedulesController : ControllerBase
         try
         {
             var result = await _scheduleService.SetScheduleAsync(courtId, request);
-            return result is null ? NotFound("الملعب غير موجود.") : Ok(result);
+            return result is null ? NotFound("The stadium is not there.") : Ok(result);
         }
         catch (InvalidOperationException ex)
         {

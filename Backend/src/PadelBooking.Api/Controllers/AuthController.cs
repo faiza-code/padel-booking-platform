@@ -20,6 +20,6 @@ public class AuthController : ControllerBase
     public async Task<ActionResult<LoginResponseDto>> Login([FromBody] LoginRequest request)
     {
         var result = await _authService.LoginAsync(request);
-        return result is null ? Unauthorized(new { message = "اسم المستخدم أو كلمة المرور غير صحيحة." }) : Ok(result);
+        return result is null ? Unauthorized(new { message = "Incorrect username or password." }) : Ok(result);
     }
 }

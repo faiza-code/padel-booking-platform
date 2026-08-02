@@ -72,6 +72,6 @@ public class BookingsController : ControllerBase
     public async Task<IActionResult> ConfirmPayment(int id, [FromBody] ConfirmPaymentRequest request)
     {
         var success = await _paymentService.ConfirmPaymentAsync(id, request.SessionId);
-        return success ? Ok(new { paid = true }) : BadRequest(new { paid = false, message = "لم يتم تأكيد الدفع بعد." });
+        return success ? Ok(new { paid = true }) : BadRequest(new { paid = false, message = "Payment has not yet been confirmed." });
     }
 }

@@ -32,7 +32,7 @@ public class ScheduleService : IScheduleService
         foreach (var day in request.Days)
         {
             if (day.OpenTime >= day.CloseTime)
-                throw new InvalidOperationException($"وقت الفتح يجب أن يكون قبل وقت الإغلاق ليوم {day.DayOfWeek}.");
+                throw new InvalidOperationException($"The opening time must be before the closing time of the day. {day.DayOfWeek}.");
         }
 
         var existing = await _db.CourtSchedules.Where(s => s.CourtId == courtId).ToListAsync();
